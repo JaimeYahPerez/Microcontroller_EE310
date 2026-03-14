@@ -23,9 +23,8 @@
 ;It is more flexible and can be used to define complex expressions or sequences of instructions.
 ;It is processed by the preprocessor before the assembly begins.
 
-#define  measuredTempInput 	15 ; this is the input value
-#define  refTempInput 		5
-    ; this is the input value
+#define  measuredTempInput 	5 ; this is the input value
+#define  refTempInput		15 ; this is the input value
 
 ;---------------------
 ; Definitions
@@ -109,34 +108,41 @@ _start:
 ;---------------------
 MAIN_LOOP:
 
-    ; Check equality first
-    MOVFF    refTemp, 0          ; W = refTemp
-    CPFSEQ  measuredTemp,0       ; skip next if measuredTemp == W
+    ;neg measuredTTemp is below refTemp range, therefore it always goes to HOT
+    BTFSC   measuredTemp,7,0     ; if bit7=1 => negative
+    BRA     MEAS_NEGATIVE
+    
+    ; Equality check: if measuredTemp == refTemp
+    MOVF    refTemp,0,0         ; W = refTemp
+    CPFSEQ  measuredTemp,0
     BRA     NOT_EQUAL
 
 EQUAL_CASE:
-    CLRF    contReg,0            ; contReg = 0
+    CLRF    contReg,0           ; contReg=0
     BRA     LED_OFF
 
 NOT_EQUAL:
-    ; Determine if measuredTemp > refTemp
-    ; Do: W = refTemp, then compare measuredTemp with W
-    MOVFF    refTemp, 0
-    ; CPFSGT f : skip next if f > W
-    CPFSGT  measuredTemp,0
+    ; If measuredTemp > refTemp => contReg=2 => COOL (RD2)
+    MOVF    refTemp,0,0         ; W = refTemp
+    CPFSGT  measuredTemp,0      ; skip next if measuredTemp > W
     BRA     MEAS_NOT_GREATER
 
 MEAS_GREATER:
     MOVLW   2
-    MOVWF   contReg,0            ; contReg = 2
-    BRA     LED_COOL             ; (per spec: > => COOL)
+    MOVWF   contReg,0
+    BRA     LED_COOL
 
 MEAS_NOT_GREATER:
-    ; Only remaining case is measuredTemp < refTemp
+    ; Else measuredTemp < refTemp => contReg=1 => HEAT (RD1)
     MOVLW   1
-    MOVWF   contReg,0            ; contReg = 1
+    MOVWF   contReg,0
     BRA     LED_HOT
 
+    MEAS_NEGATIVE:
+    MOVLW   1
+    MOVWF   contReg,0
+    BRA     LED_HOT
+    
 ;---------------------
 ; 5) Output actions
 ;---------------------
@@ -144,18 +150,21 @@ LED_COOL:
     ; Turn ON COOL on RD2, turn OFF HEAT on RD1
     BCF     LATD,1,0             ; heat off
     BSF     LATD,2,0             ; cool on
+    CALL    DELAY_1S
     BRA     MAIN_LOOP
 
 LED_HOT:
     ; Turn ON HEAT on RD1, turn OFF COOL on RD2
     BCF     LATD,2,0             ; cool off
     BSF     LATD,1,0             ; heat on
+    CALL    DELAY_1S
     BRA     MAIN_LOOP
 
 LED_OFF:
     ; Turn both off
     BCF     LATD,1,0
     BCF     LATD,2,0
+    CALL    DELAY_1S
     BRA     MAIN_LOOP
 
     
@@ -173,9 +182,15 @@ CONVERT_REF_TO_DEC:
     CLRF    refHund,0
 
     ; numerator = refTemp
-    MOVF    refTemp,0,0
-    MOVWF   numerator,0
+    MOVF  refTemp,0,0
+    MOVWF numerator,0
 
+    ; If negative (bit7=1), take absolute value (ignore sign)
+    BTFSS numerator,7,0
+    BRA   REF_POS
+    NEGF  numerator,0
+    
+REF_POS:
     ; tens = 0
     CLRF    quotient,0
     MOVLW   10
@@ -239,7 +254,26 @@ MEAS_STORE_ONES_TENS:
     MOVFF   numerator, measOnes
     MOVFF   quotient,  measTens
 
-
+    RETURN
+;===========================================================
+; Subroutine: DELAY_1S
+; Input:  nothing
+; Output: nothing
+; Note: Its' sole purpose is to create a 1 second delay in runtime
+;===========================================================    
+    
+DELAY_1S:
+    ; nested loops using REG10/REG11
+    MOVLW   0xFF
+    MOVWF   REG11,0
+DLY_OUTER:
+    MOVLW   0xFF
+    MOVWF   REG10,0
+DLY_INNER:
+    DECFSZ  REG10,1,0
+    BRA     DLY_INNER
+    DECFSZ  REG11,1,0
+    BRA     DLY_OUTER
     RETURN
     
     END
