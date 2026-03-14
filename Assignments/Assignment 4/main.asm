@@ -11,7 +11,8 @@
 // OUTPUTS: 2 LED's, one Hot pin and one Cold pin
 // INPUTS: keypad interface for user input, temperature sensor for environment
 // Versions:
-//  	V1.0: 3/9/2026 - First version 
+//  	V1.0: 3/9/2026 - First version
+//	V1.1: 3/13/2026 - Updated Version (Delay Included)
 //-----------------------------
 #include "MyConfigFile.inc"
 #include <xc.inc>
@@ -88,7 +89,7 @@ _start:
     ; Turn everything off initially
     CLRF    LATD,0
     
-    ;---------------------
+;---------------------
 ; 2) Load simulated inputs into required registers (R8)
 ;---------------------
     MOVLW   refTempInput
@@ -108,7 +109,7 @@ _start:
 ;---------------------
 MAIN_LOOP:
 
-    ;neg measuredTTemp is below refTemp range, therefore it always goes to HOT
+    ; neg measuredTTemp is below refTemp range, therefore it always goes to HOT
     BTFSC   measuredTemp,7,0     ; if bit7=1 => negative
     BRA     MEAS_NEGATIVE
     
@@ -173,7 +174,7 @@ LED_OFF:
 ; Subroutine: CONVERT_REF_TO_DEC
 ; Input:  refTemp (0x20), assumed 10..50
 ; Output: refOnes/refTens/refHund at 0x60/0x61/0x62
-; Method: repeated subtraction by 10 (simple technique)
+; Method: repeated subtraction by 10 
 ;===========================================================
 CONVERT_REF_TO_DEC:
     ; clear outputs
@@ -219,7 +220,7 @@ REF_STORE:
 ; Subroutine: CONVERT_MEAS_TO_DEC
 ; Input:  measuredTemp (0x21), may be negative (-10..60)
 ; Output: measOnes/measTens/measHund at 0x70/0x71/0x72
-; Note: ignores negative sign (stores magnitude)
+; Note: stores magnitude
 ;===========================================================
 CONVERT_MEAS_TO_DEC:
     ; clear outputs
@@ -232,9 +233,9 @@ CONVERT_MEAS_TO_DEC:
     MOVWF   numerator,0
 
     ; If negative (bit7=1), take absolute value
-    BTFSS   numerator,7,0       ; skip if negative
+    BTFSS   numerator,7,0
     BRA     MEAS_POS
-    NEGF    numerator,0         ; numerator = -numerator (magnitude)
+    NEGF    numerator,0
 MEAS_POS:
     ; First compute tens/ones from numerator
     CLRF    quotient,0
