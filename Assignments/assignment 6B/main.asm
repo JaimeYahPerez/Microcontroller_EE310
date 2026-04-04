@@ -18,8 +18,8 @@
 ;----------------------------------------------------------
 ; Constants
 ;----------------------------------------------------------
-INNER_LOOP      equ     1
-OUTER_LOOP      equ     1
+INNER_LOOP      equ     255
+OUTER_LOOP      equ     255
 
 COUNTREG        equ     20h
 BTNREG          equ     21h
