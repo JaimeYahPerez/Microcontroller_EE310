@@ -18,8 +18,8 @@
 ;----------------------------------------------------------
 ; Constants
 ;----------------------------------------------------------
-INNER_LOOP      equ     255
-OUTER_LOOP      equ     255
+INNER_LOOP      equ     2
+OUTER_LOOP      equ     2
 
 COUNTREG        equ     20h
 BTNREG          equ     21h
@@ -89,17 +89,17 @@ start:
     ; Initialize count to 0
     ;-----------------------------
     CLRF    COUNTREG,0
-    RCALL   _loadDisplayFromCount
+    CALL   _loadDisplayFromCount
     MOVFF   TABLAT, LATD
 
 main:
-    RCALL   _readButtons
+    CALL   _readButtons
 
     ; both pressed -> reset
     MOVLW   BTN_BOTH
     CPFSEQ  BTNREG,0
     GOTO    checkA
-    RCALL   ResetZero
+    CALL   ResetZero
     GOTO    updateDisplay
 
 checkA:
@@ -107,7 +107,7 @@ checkA:
     MOVLW   BTN_A_ONLY
     CPFSEQ  BTNREG,0
     GOTO    checkB
-    RCALL   CountUP
+    CALL   CountUP
     GOTO    updateDisplay
 
 checkB:
@@ -115,11 +115,11 @@ checkB:
     MOVLW   BTN_B_ONLY
     CPFSEQ  BTNREG,0
     GOTO    updateDisplay
-    RCALL   CountDOWN
+    CALL   CountDOWN
 
 updateDisplay:
     MOVFF   TABLAT, LATD
-    RCALL   DELAY
+    CALL   DELAY
     GOTO    main
 
 ;----------------------------------------------------------
@@ -132,12 +132,12 @@ CountUP:
 
     ; wrap F -> 0
     CLRF    COUNTREG,0
-    RCALL   _loadDisplayFromCount
+    CALL   _loadDisplayFromCount
     RETURN
 
 CountUP_Increment:
     INCF    COUNTREG,1,0
-    RCALL   _loadDisplayFromCount
+    CALL   _loadDisplayFromCount
     RETURN
 
 ;----------------------------------------------------------
@@ -164,7 +164,7 @@ CountDOWN_Decrement:
 ;----------------------------------------------------------
 ResetZero:
     CLRF    COUNTREG,0
-    RCALL   _loadDisplayFromCount
+    CALL   _loadDisplayFromCount
     RETURN
 
 ;----------------------------------------------------------
