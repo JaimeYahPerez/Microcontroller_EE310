@@ -1,31 +1,21 @@
 /*
- * Servo Motor Control Simulation using PWM and PIC18F47K42
- *
- * Simpler simulation option:
- * RB2 = software-mirrored PWM output for the logic analyzer / servo signal
- * RB0 = SW1, active-low, slowly moves servo left
- * RB1 = SW2, active-low, slowly moves servo right
- *
- * Servo timing target:
- * Period ? 20 ms
- * Pulse width ? 1.0 ms to 2.0 ms
- *
- * With Fosc = 4 MHz:
- * Tosc = 0.25 us
- * Timer2 prescale = 1:128
- *
- * PWM Period = (T2PR + 1) * 4 * Tosc * Prescale
- *            = (155 + 1) * 4 * 0.25 us * 128
- *            = 19,968 us ? 20 ms
- *
- * Pulse Width = Tosc * Prescale * CCPR2
- *             = 0.25 us * 128 * CCPR2
- *             = 32 us * CCPR2
- *
- * Servo duty count examples:
- * CCPR2 = 31 -> 992 us
- * CCPR2 = 47 -> 1504 us
- * CCPR2 = 63 -> 2016 us
+* ---------------------
+ * Title: Servo Motor Control 
+ * ---------------------
+ * Program Details: A simple program to control a servo motor with two switches
+ * using PWM
+ * Author: Jaime Yah-Perez
+ * Inputs: RB0, RB1
+ * Outputs: Outputs RB2
+ * Setup: C- Simulator
+ * Date: May 14, 2026
+ * 
+ * File Dependencies / Libraries: PWM.h is required
+ * Compiler: Xc8, 3.10
+ * Versions:
+ *  1.0 first initial setup for simulation with PWM
+ * 1.1 Switches and servo I/O included for simulation
+ * 1.2 Corrections for actual circuit
  */
 
 #include <xc.h>
@@ -128,7 +118,6 @@ void main(void)
     while (1)
     {
         /*
-         * Keep this running as fast as possible.
          * This is what makes RB2 show the PWM in the simulator.
          */
         pwmStatus = PWM2_OutputStatusGet();
@@ -166,7 +155,7 @@ void main(void)
                 }
                 else
                 {
-                    // No switch, or both switches: hold current position.
+                    // No switch: hold current position.
                     //Servo_SetDuty(servoDuty);
                 }
             }
